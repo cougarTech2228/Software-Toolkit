@@ -5,10 +5,10 @@ import edu.wpi.first.wpilibj.InterruptHandlerFunction;
 
 public class CT_DigitalInput {
 
-    private DigitalInput digitalInput;
-    private Runnable methodToRun;
-    private boolean isInterruptEnabled;
-    private boolean negateLogic;
+    private DigitalInput m_digitalInput;
+    private Runnable m_methodToRun;
+    private boolean m_isInterruptEnabled;
+    private boolean m_negateLogic;
     /**
      * Negate logic is useful if you want to reverse the output of getStatus(). A use for setting this variable true
      * would be if you were using a light beam sensor and wanted to differentiate between searching for something blocking
@@ -24,9 +24,9 @@ public class CT_DigitalInput {
      * @param negateLogic can negate the return value of getStatus() for this instance.
      */
     public CT_DigitalInput(int pin, boolean negateLogic) {
-        digitalInput = new DigitalInput(pin);
-        this.negateLogic = negateLogic;
-        isInterruptEnabled = false;
+        m_digitalInput = new DigitalInput(pin);
+        m_negateLogic = negateLogic;
+        m_isInterruptEnabled = false;
     }
 
     /**
@@ -48,10 +48,10 @@ public class CT_DigitalInput {
      * @param negateLogic can negate the return value of getStatus() for this instance
      */
     public CT_DigitalInput(int pin, Runnable methodToRun, boolean negateLogic) { 
-        digitalInput = new DigitalInput(pin);
-        this.negateLogic = negateLogic;
-        this.methodToRun = methodToRun;
-        isInterruptEnabled = false;
+        m_digitalInput = new DigitalInput(pin);
+        m_negateLogic = negateLogic;
+        m_methodToRun = methodToRun;
+        m_isInterruptEnabled = false;
     }
 
     /**
@@ -71,7 +71,7 @@ public class CT_DigitalInput {
      * @param methodToRun the method that will be ran in the runWhenTripped method.
      */
     public void setMethodToRun(Runnable methodToRun) {
-        this.methodToRun = methodToRun;
+        m_methodToRun = methodToRun;
     }
 
     /**
@@ -84,11 +84,11 @@ public class CT_DigitalInput {
      * @return If the digital IO was tripped.
      */
     public boolean runWhenTripped() {
-        if(getStatus() && !isInterruptEnabled) {
+        if(getStatus() && !m_isInterruptEnabled) {
 
-            if(methodToRun != null) {
-                Runnable method = methodToRun;
-                methodToRun = null;
+            if(m_methodToRun != null) {
+                Runnable method = m_methodToRun;
+                m_methodToRun = null;
                 method.run();
                 return true;
             } else {
@@ -111,7 +111,7 @@ public class CT_DigitalInput {
      */
     public void setInterrupt(Runnable runnable, boolean interruptOnRisingEdge, boolean interruptOnFallingEdge, boolean disableWhenFired) {
 
-        digitalInput.requestInterrupts(new InterruptHandlerFunction<Object>() {
+        m_digitalInput.requestInterrupts(new InterruptHandlerFunction<Object>() {
 
             @Override
             public void interruptFired(int interruptAssertedMask, Object param) {
@@ -123,7 +123,7 @@ public class CT_DigitalInput {
             }
         });
 
-        digitalInput.setUpSourceEdge(interruptOnRisingEdge, interruptOnFallingEdge);
+        m_digitalInput.setUpSourceEdge(interruptOnRisingEdge, interruptOnFallingEdge);
         enableInterrupts();
     }
 
@@ -131,16 +131,16 @@ public class CT_DigitalInput {
      * Enable interrupts.
      */
     public void enableInterrupts() {
-        digitalInput.enableInterrupts();
-        isInterruptEnabled = true;
+        m_digitalInput.enableInterrupts();
+        m_isInterruptEnabled = true;
     }
 
     /**
      * Disable interrupts.
      */
     public void disableInterrupts() {
-        digitalInput.disableInterrupts();
-        isInterruptEnabled = false;
+        m_digitalInput.disableInterrupts();
+        m_isInterruptEnabled = false;
     }
 
 
@@ -152,10 +152,10 @@ public class CT_DigitalInput {
      * @return the status of the digital input.
      */
     public boolean getStatus() {
-        if(negateLogic)
-            return !digitalInput.get();
+        if(m_negateLogic)
+            return !m_digitalInput.get();
         else
-            return digitalInput.get();
+            return m_digitalInput.get();
     }
 
 }

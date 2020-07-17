@@ -13,9 +13,7 @@ import edu.wpi.first.wpilibj.I2C.Port;
 public class CT_LIDARSensor {
 
 	private static final byte k_deviceAddress = 0x62;
-
 	private final byte m_port;
-
 	private final ByteBuffer m_buffer = ByteBuffer.allocateDirect(2);
 
 	public CT_LIDARSensor(Port port) {

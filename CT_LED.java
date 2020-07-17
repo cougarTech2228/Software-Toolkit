@@ -6,11 +6,11 @@ import edu.wpi.first.wpilibj.util.Color;
 
 public class CT_LED {
 
-    private AddressableLED LED;
-    private AddressableLEDBuffer LEDBuffer;
+    private AddressableLED m_LED;
+    private AddressableLEDBuffer m_LEDBuffer;
     private int m_rainbowFirstPixelHue = 0;
     private int m_colorIndex = 0;
-    private int snakeLoopIndex = 0;
+    private int m_snakeLoopIndex = 0;
     private int m_doMoveCounter = 0;
 
     public enum Speed {
@@ -35,24 +35,24 @@ public class CT_LED {
      * @param length the amount of individual LEDS that will be turned on and affected by color chanes.
      */
     public CT_LED(int PWMPort, int length) {
-        LED = new AddressableLED(PWMPort);
-        LEDBuffer = new AddressableLEDBuffer(length);
-        LED.setLength(LEDBuffer.getLength());
-        LED.setData(LEDBuffer);
+        m_LED = new AddressableLED(PWMPort);
+        m_LEDBuffer = new AddressableLEDBuffer(length);
+        m_LED.setLength(m_LEDBuffer.getLength());
+        m_LED.setData(m_LEDBuffer);
     }
 
     /**
      * Turn on the LED Strip.
      */
     public void startLEDs() {
-        LED.start();
+        m_LED.start();
     }
 
     /**
      * Turn off the LED Strip.
      */
     public void stopLEDS() {
-        LED.stop();
+        m_LED.stop();
     }
 
     /**
@@ -70,7 +70,7 @@ public class CT_LED {
 
             int colorIndex = 0;
 
-            for (int ledIndex = 0; ledIndex < LEDBuffer.getLength(); ledIndex++) {
+            for (int ledIndex = 0; ledIndex < m_LEDBuffer.getLength(); ledIndex++) {
 
                 if(colorIndex == color.length - 1) { // Cycles the colorIndex variable to rotate through the color array.
                     colorIndex = 0;
@@ -78,11 +78,11 @@ public class CT_LED {
                     colorIndex++;
                 }
 
-                LEDBuffer.setLED(ledIndex, color[colorIndex]);
+                m_LEDBuffer.setLED(ledIndex, color[colorIndex]);
 
             }
 
-            LED.setData(LEDBuffer);
+            m_LED.setData(m_LEDBuffer);
         }
     }
 
@@ -93,12 +93,13 @@ public class CT_LED {
      * @param speed the speed at which the snake will move. Current speeds:
      *              Slow, Fast, Ludicrous.
      * @param color the colors that will be moving on the LED strip. More than 1 color should be passed in or the method
-     * will not function.
+     * will not work.
      */
     public void setMovingColors(Speed speed, Color... color) {
 
         if (color.length <= 1) {
             System.out.println("Too little amount of colors passed in, pass in more colors or use the setColor method.");
+            return;
         }
 
         int colorLoopIndex = m_colorIndex;
@@ -109,7 +110,7 @@ public class CT_LED {
             m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
 
             // Loops through the whole LED strip.
-            for (int ledIndex = 0; ledIndex < LEDBuffer.getLength(); ledIndex++) {
+            for (int ledIndex = 0; ledIndex < m_LEDBuffer.getLength(); ledIndex++) {
     
                 // Increment the color loop index
                 colorLoopIndex++;
@@ -119,7 +120,7 @@ public class CT_LED {
                     colorLoopIndex = 0;
                 } 
 
-                LEDBuffer.setLED(ledIndex, color[colorLoopIndex]);
+                m_LEDBuffer.setLED(ledIndex, color[colorLoopIndex]);
             }
 
             // Increment the color index so the color pattern is off by one on the next time this method is run. 
@@ -136,7 +137,7 @@ public class CT_LED {
             m_doMoveCounter++;
         }
 
-        LED.setData(LEDBuffer);
+        m_LED.setData(m_LEDBuffer);
     }
 
     /**
@@ -148,12 +149,13 @@ public class CT_LED {
      *                          speeds: Slow, Fast, Ludicrous.
      * @param backgroundColor   the color that will be the background that the snake will travel over.
      * @param snakeColorPattern the snake pattern that will traverse the LED strip. 
-     * Length needs to be greater than 0 or the method will not function.
+     * Length needs to be greater than 0 or the method will not work.
      */
     public void doSnake(Speed speed, Color backgroundColor, Color[] snakeColorPattern) {
         
         if (snakeColorPattern.length == 0) {
             System.out.println("Snake length is zero, create a longer snake by making the snakeColorPattern array longer.");
+            return;
         }
 
         // Waits for the correct amount of loop iterations to complete.
@@ -162,16 +164,16 @@ public class CT_LED {
             m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
 
             // Loops through the whole LED strip.
-            for (int ledIndex = 0; ledIndex < LEDBuffer.getLength(); ledIndex++) {
+            for (int ledIndex = 0; ledIndex < m_LEDBuffer.getLength(); ledIndex++) {
 
                  // Checks if the current led is the one that will start the snake.
-                if(ledIndex == snakeLoopIndex) {
+                if(ledIndex == m_snakeLoopIndex) {
 
                     int endOfSnakeIndex = ledIndex + snakeColorPattern.length;
                     int currentColorIndex = 0;
 
                     // Loops through the entire snake.
-                    for(int snakeIndex = ledIndex; snakeIndex < LEDBuffer.getLength() + snakeColorPattern.length; snakeIndex++) {
+                    for(int snakeIndex = ledIndex; snakeIndex < m_LEDBuffer.getLength() + snakeColorPattern.length; snakeIndex++) {
                         
 
                         // If the current color index is outside the color array, that means the snake is complete.
@@ -183,11 +185,11 @@ public class CT_LED {
                          
                         // Moves the new snake index back to the beginning when the snake goes over 
                         // the end so it flows smoothly to the beginning again.
-                        if(snakeIndex > LEDBuffer.getLength() - 1) {
-                            newSnakeIndex -= LEDBuffer.getLength(); 
+                        if(snakeIndex > m_LEDBuffer.getLength() - 1) {
+                            newSnakeIndex -= m_LEDBuffer.getLength(); 
                         }
 
-                        LEDBuffer.setLED(newSnakeIndex, snakeColorPattern[currentColorIndex]);
+                        m_LEDBuffer.setLED(newSnakeIndex, snakeColorPattern[currentColorIndex]);
                         currentColorIndex++;
 
                     }
@@ -196,24 +198,24 @@ public class CT_LED {
                     ledIndex = endOfSnakeIndex - 1;
 
                 } else {
-                    LEDBuffer.setLED(ledIndex, backgroundColor);
+                    m_LEDBuffer.setLED(ledIndex, backgroundColor);
                 }
 
             }
             m_doMoveCounter = 0;
 
-            snakeLoopIndex++;
+            m_snakeLoopIndex++;
 
             // Reset the snake loop index back to the beginning when it reaches the end.
-            if (snakeLoopIndex > LEDBuffer.getLength() - 1) {
-                snakeLoopIndex = 0;
+            if (m_snakeLoopIndex > m_LEDBuffer.getLength() - 1) {
+                m_snakeLoopIndex = 0;
             }
 
         } else {
             m_doMoveCounter++;
         }
 
-        LED.setData(LEDBuffer);
+        m_LED.setData(m_LEDBuffer);
     }
 
     /**
@@ -225,12 +227,12 @@ public class CT_LED {
      */
     public void doRainbow() {
         // For every pixel
-        for (int i = 0; i < LEDBuffer.getLength(); i++) {
+        for (int i = 0; i < m_LEDBuffer.getLength(); i++) {
             // Calculate the hue - hue is easier for rainbows because the color
             // shape is a circle so only one value needs to precess
-            int hue = (m_rainbowFirstPixelHue + (i * 180 / LEDBuffer.getLength())) % 180;
+            int hue = (m_rainbowFirstPixelHue + (i * 180 / m_LEDBuffer.getLength())) % 180;
             // Set the value
-            LEDBuffer.setHSV(i, hue, 255, 128);
+            m_LEDBuffer.setHSV(i, hue, 255, 128);
         }
 
         // Increase by to make the rainbow "move"
@@ -238,6 +240,6 @@ public class CT_LED {
         // Check bounds
         m_rainbowFirstPixelHue %= 180;
 
-        LED.setData(LEDBuffer);
+        m_LED.setData(m_LEDBuffer);
     }
 }

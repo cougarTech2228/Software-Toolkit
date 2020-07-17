@@ -22,7 +22,7 @@ public class CT_ColorSensor {
     private final Color m_kRedTarget = ColorMatch.makeColor(0.51, 0.34, 0.13);
     private final Color m_kYellowTarget = ColorMatch.makeColor(0.32, 0.55, 0.12);
 
-    private Runnable methodToRun;
+    private Runnable m_methodToRun;
 
     /**
      * Creates a new default ColorSensor instance.
@@ -41,7 +41,7 @@ public class CT_ColorSensor {
      */
     public CT_ColorSensor(I2C.Port port, Runnable methodToRun) {
         m_colorSensor = new ColorSensorV3(port);
-        this.methodToRun = methodToRun;
+        m_methodToRun = methodToRun;
     }
 
     /**
@@ -50,7 +50,7 @@ public class CT_ColorSensor {
      * @param methodToRun the method that will be ran in the runWhenColorIsDetected method.
      */
     public void setMethodToRun(Runnable methodToRun) {
-        this.methodToRun = methodToRun;
+        m_methodToRun = methodToRun;
     }
 
     /**
@@ -101,9 +101,9 @@ public class CT_ColorSensor {
 
         if(color.equals(getColor())) {
 
-            if(methodToRun != null) {
-                Runnable method = methodToRun;
-                methodToRun = null;
+            if(m_methodToRun != null) {
+                Runnable method = m_methodToRun;
+                m_methodToRun = null;
                 method.run();
                 return true;
             } else {
