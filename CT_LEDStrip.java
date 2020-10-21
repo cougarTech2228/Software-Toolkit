@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
-public class CT_LED {
+public class CT_LEDStrip {
 
     private AddressableLED m_LED;
     private AddressableLEDBuffer m_LEDBuffer;
@@ -24,7 +24,7 @@ public class CT_LED {
      * 
      * @param PWMPort the PWM port the LED Strip is connected.
      */
-    public CT_LED(int PWMPort) {
+    public CT_LEDStrip(int PWMPort) {
         this(PWMPort, 150); // 150 is the max amount of LEDS on a standard LED strip
     }
 
@@ -34,7 +34,7 @@ public class CT_LED {
      * @param PWMPort the PWM port the LED Strip is connected.
      * @param length the amount of individual LEDS that will be turned on and affected by color chanes.
      */
-    public CT_LED(int PWMPort, int length) {
+    public CT_LEDStrip(int PWMPort, int length) {
         m_LED = new AddressableLED(PWMPort);
         m_LEDBuffer = new AddressableLEDBuffer(length);
         m_LED.setLength(m_LEDBuffer.getLength());
