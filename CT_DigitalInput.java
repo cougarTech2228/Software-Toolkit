@@ -3,10 +3,10 @@ package frc.robot.Toolkit;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.InterruptHandlerFunction;
 
-public class CT_DigitalInput {
+public class CT_DigitalInput extends DigitalInput {
 
-    private DigitalInput m_digitalInput;
     private Runnable m_methodToRun;
+    private Runnable m_lastMethodToRun;
     private boolean m_isInterruptLatched;
     private boolean m_negateLogic;
     private Runnable m_interruptRunnable;
@@ -60,9 +60,10 @@ public class CT_DigitalInput {
      * @param negateLogic can negate the return value of getStatus() for this instance
      */
     public CT_DigitalInput(int pin, Runnable methodToRun, boolean negateLogic) { 
-        m_digitalInput = new DigitalInput(pin);
+        super(pin);
         m_negateLogic = negateLogic;
         m_methodToRun = methodToRun;
+        m_lastMethodToRun = m_methodToRun;
         m_isInterruptLatched = false;
         m_interruptRunnable = null;
     }
@@ -74,6 +75,15 @@ public class CT_DigitalInput {
      */
     public void setMethodToRun(Runnable methodToRun) {
         m_methodToRun = methodToRun;
+        m_lastMethodToRun = m_methodToRun;
+    }
+
+    /**
+     * Resets the method to run for the runWhenTripped method to use as it won't run 
+     * again if a method is not inputted or isn't reseted.
+     */
+    public void resetMethodToRun() {
+        m_methodToRun = m_lastMethodToRun;
     }
 
     /**
@@ -127,7 +137,7 @@ public class CT_DigitalInput {
 
         m_interruptRunnable = runnable;
 
-        m_digitalInput.requestInterrupts(new InterruptHandlerFunction<Object>() {
+        requestInterrupts(new InterruptHandlerFunction<Object>() {
 
             @Override
             public void interruptFired(int interruptAssertedMask, Object param) {
@@ -138,8 +148,8 @@ public class CT_DigitalInput {
             }
         });
 
-        m_digitalInput.setUpSourceEdge(interruptOnFallingEdge, interruptOnRisingEdge);
-        m_digitalInput.enableInterrupts();
+        setUpSourceEdge(interruptOnFallingEdge, interruptOnRisingEdge);
+        enableInterrupts();
         m_isInterruptLatched = true;
     }
 
@@ -178,9 +188,9 @@ public class CT_DigitalInput {
      */
     public boolean getStatus() {
         if(m_negateLogic)
-            return !m_digitalInput.get();
+            return !get();
         else
-            return m_digitalInput.get();
+            return get();
     }
 
 }

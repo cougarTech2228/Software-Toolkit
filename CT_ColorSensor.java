@@ -7,10 +7,17 @@ import edu.wpi.first.wpilibj.util.Color;
 
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorMatch;
+/**
+ * Wire pins
+ * 
+ * White wire - SDA (Data)
+ * Blue wire - SCL (Clock)
+ * Red wire - Voltage
+ * Black wire - Ground
+ */
 
-public class CT_ColorSensor {
+public class CT_ColorSensor extends ColorSensorV3{
 
-    private final ColorSensorV3 m_colorSensor;
     private final ColorMatch m_colorMatcher = new ColorMatch();
 
     // private final Color m_kBlueTarget = Color.kAqua;
@@ -30,7 +37,7 @@ public class CT_ColorSensor {
      * @param port Port that the sensor is connected to. Either kMXP or kOnBoard.
      */
     public CT_ColorSensor(I2C.Port port) {
-        m_colorSensor = new ColorSensorV3(port);
+        this(port, null);
     }
 
     /**
@@ -40,8 +47,13 @@ public class CT_ColorSensor {
      * @param methodToRun the method that will be ran in the runWhenColorIsDetected method.
      */
     public CT_ColorSensor(I2C.Port port, Runnable methodToRun) {
-        m_colorSensor = new ColorSensorV3(port);
+        super(port);
         m_methodToRun = methodToRun;
+
+        m_colorMatcher.addColorMatch(m_kBlueTarget);
+        m_colorMatcher.addColorMatch(m_kGreenTarget);
+        m_colorMatcher.addColorMatch(m_kRedTarget);
+        m_colorMatcher.addColorMatch(m_kYellowTarget); 
     }
 
     /**
@@ -58,8 +70,8 @@ public class CT_ColorSensor {
      * 
      * @return the Color object that is seen by the color sensor.
      */
-    public Color getColor() {
-        Color detectedColor = m_colorSensor.getColor();
+    public Color getMatchedColor() {
+        Color detectedColor = getColor();
         ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
 
         if (match.color == m_kBlueTarget) {
@@ -81,10 +93,32 @@ public class CT_ColorSensor {
      * @return a double where 0 is the low confidence and 1 is high confidence.
      */
     public double getConfidence() {
-        Color detectedColor = m_colorSensor.getColor();
+        Color detectedColor = super.getColor();
         ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
 
         return match.confidence;
+    }
+
+    /**
+     * Gives the current color as a string.
+     * 
+     * @return the current color in a readable format.
+     */
+    public String getMatchedColorString() {
+        Color detectedColor = getColor();
+        ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
+
+        if (match.color == m_kBlueTarget) {
+            return "Blue";
+        } else if (match.color == m_kRedTarget) {
+            return "Red";
+        } else if (match.color == m_kGreenTarget) {
+            return "Green";
+        } else if (match.color == m_kYellowTarget) {
+            return "Yellow";
+        } else {
+            return "Unexpected error or color occurred.";
+        }
     }
     
     /**
@@ -99,7 +133,7 @@ public class CT_ColorSensor {
      */
     public boolean runWhenColorIsDetected(Color color) {
 
-        if(color.equals(getColor())) {
+        if(color.equals(getMatchedColor())) {
 
             if(m_methodToRun != null) {
                 Runnable method = m_methodToRun;

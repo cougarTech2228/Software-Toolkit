@@ -4,9 +4,8 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
-public class CT_LEDStrip {
+public class CT_LEDStrip extends AddressableLED {
 
-    private AddressableLED m_LED;
     private AddressableLEDBuffer m_LEDBuffer;
     private int m_rainbowFirstPixelHue = 0;
     private int m_colorIndex = 0;
@@ -35,24 +34,10 @@ public class CT_LEDStrip {
      * @param length the amount of individual LEDS that will be turned on and affected by color chanes.
      */
     public CT_LEDStrip(int PWMPort, int length) {
-        m_LED = new AddressableLED(PWMPort);
+        super(PWMPort);
         m_LEDBuffer = new AddressableLEDBuffer(length);
-        m_LED.setLength(m_LEDBuffer.getLength());
-        m_LED.setData(m_LEDBuffer);
-    }
-
-    /**
-     * Turn on the LED Strip.
-     */
-    public void startLEDs() {
-        m_LED.start();
-    }
-
-    /**
-     * Turn off the LED Strip.
-     */
-    public void stopLEDS() {
-        m_LED.stop();
+        setLength(m_LEDBuffer.getLength());
+        setData(m_LEDBuffer);
     }
 
     /**
@@ -82,7 +67,7 @@ public class CT_LEDStrip {
 
             }
 
-            m_LED.setData(m_LEDBuffer);
+            setData(m_LEDBuffer);
         }
     }
 
@@ -137,7 +122,7 @@ public class CT_LEDStrip {
             m_doMoveCounter++;
         }
 
-        m_LED.setData(m_LEDBuffer);
+        setData(m_LEDBuffer);
     }
 
     /**
@@ -215,7 +200,7 @@ public class CT_LEDStrip {
             m_doMoveCounter++;
         }
 
-        m_LED.setData(m_LEDBuffer);
+        setData(m_LEDBuffer);
     }
 
     /**
@@ -240,6 +225,6 @@ public class CT_LEDStrip {
         // Check bounds
         m_rainbowFirstPixelHue %= 180;
 
-        m_LED.setData(m_LEDBuffer);
+        setData(m_LEDBuffer);
     }
 }
