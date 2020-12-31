@@ -4,6 +4,10 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
+/**
+ * CT_LEDStrip is a wrapper class designed for an easy interface with the AddressableLED class. 
+ * @version 12/30/20
+ */
 public class CT_LEDStrip extends AddressableLED {
 
     private AddressableLEDBuffer m_LEDBuffer;
@@ -11,6 +15,7 @@ public class CT_LEDStrip extends AddressableLED {
     private int m_colorIndex = 0;
     private int m_snakeLoopIndex = 0;
     private int m_doMoveCounter = 0;
+    private int m_alternateColorIndex = 0;
 
     public enum Speed {
         Slow, // 50 loop iterations
@@ -201,6 +206,34 @@ public class CT_LEDStrip extends AddressableLED {
         }
 
         setData(m_LEDBuffer);
+    }
+
+    /**
+     * Will alternate between the color patterns specified in the parameter. This method should be called
+     * in the periodic of a subsystem to gain full effect.
+     * 
+     * @param speed the speed at which the snake will move. Current speeds:
+     *              Slow, Fast, Ludicrous.
+     * @param colorPatterns will be all the color patterns (which are arrays) that will be alternated between.
+     */
+    public void alternateColors(Speed speed, Color... colorPatterns) {
+
+        if(m_doMoveCounter == 25 && speed == Speed.Fast ||
+            m_doMoveCounter == 50 && speed == Speed.Slow ||
+            m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
+
+            setColor(colorPatterns[m_alternateColorIndex]);
+            m_doMoveCounter = 0;
+            m_alternateColorIndex++;
+
+        } else {
+            m_doMoveCounter++;
+        }
+
+        // Put the color index back to 0 if it excedes the amount of values in the array.
+        if (m_alternateColorIndex > (colorPatterns.length - 1)) {
+            m_alternateColorIndex = 0;
+        }
     }
 
     /**
