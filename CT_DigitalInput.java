@@ -167,6 +167,15 @@ public class CT_DigitalInput extends DigitalInput {
     }
 
     /**
+     * Setter method for the latch interrupt variable. Will decide if said interrupt will be run or not.
+     * 
+     * @param latchInterupt boolean variable to be set to m_isInterruptLatched
+     */
+    public void setInterruptLatched(boolean latchInterupt) {
+        m_isInterruptLatched = latchInterupt;
+    }
+
+    /**
      * Determines if every value in a boolean array is true.
      * @return whether or not every value is true.
      */
