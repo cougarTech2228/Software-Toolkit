@@ -15,15 +15,13 @@ public class CT_Gyro {
     private GyroType m_gyroType;
 
     public enum GyroType {
-        ADXRS450,
-        PigeonImu
+        ADXRS450, PigeonImu
     }
-
 
     /**
      * ADXRS450 constructor.
      * 
-     * @param SPI_Por port that the gyro is connected to.
+     * @param SPI_Port port that the gyro is connected to.
      */
     public CT_Gyro(Port SPI_Port) {
         m_gyro = new ADXRS450_Gyro(SPI_Port);
@@ -38,24 +36,28 @@ public class CT_Gyro {
      */
     public CT_Gyro(int can_ID) {
         m_pigeon = new PigeonIMU(can_ID);
-        m_gyroType = GyroType.PigeonImu;
         m_pigeon.enterCalibrationMode(CalibrationMode.BootTareGyroAccel);
+        m_gyroType = GyroType.PigeonImu;
     }
 
     /**
      * Resets the yaw by setting it to 0.
      */
     public void resetYaw() {
-        m_pigeon.setYaw(0);
+        if (m_gyroType == GyroType.PigeonImu) {
+            m_pigeon.setYaw(0);
+        } else {
+            m_gyro.reset();
+        }
     }
-    
-    /** 
+
+    /**
      * Gets the yaw.
      * 
      * @return the yaw [0, 360].
      */
     public double getYaw() {
-        if(m_gyroType == GyroType.PigeonImu) {
+        if (m_gyroType == GyroType.PigeonImu) {
             m_pigeon.getYawPitchRoll(m_yawPitchRoll);
             return Math.IEEEremainder(m_yawPitchRoll[0], 360.0);
         } else {
@@ -63,26 +65,34 @@ public class CT_Gyro {
         }
     }
 
-    /** 
-     * PigeonIMU method.
-     * Gets the pitch.
+    /**
+     * PigeonIMU method. Gets the pitch.
      * 
      * @return the pitch within [-90,+90] degrees.
+     * @throws Exception when this method is called with the ADXRS450 gyro created
      */
-    public double getPitch() {
-        m_pigeon.getYawPitchRoll(m_yawPitchRoll);
-        return m_yawPitchRoll[1];
+    public double getPitch() throws Exception {
+        if (m_gyroType == GyroType.PigeonImu) {
+            m_pigeon.getYawPitchRoll(m_yawPitchRoll);
+            return m_yawPitchRoll[1];
+        } else {
+            throw new Exception("Used the getPitch() method on the ADXRS450 gyro.");
+        }
     }
 
-    /** 
-     * PigeonIMU method.
-     * Gets the roll.
+    /**
+     * PigeonIMU method. Gets the roll.
      * 
      * @return the roll within [-90,+90] degrees.
+     * @throws Exception when this method is called with the ADXRS450 gyro created
      */
-    public double getRoll() {
-        m_pigeon.getYawPitchRoll(m_yawPitchRoll);
-        return m_yawPitchRoll[2];
+    public double getRoll() throws Exception {
+        if (m_gyroType == GyroType.PigeonImu) {
+            m_pigeon.getYawPitchRoll(m_yawPitchRoll);
+            return m_yawPitchRoll[2];
+        } else {
+            throw new Exception("Used the getRoll() method on the ADXRS450 gyro.");
+        }
     }
 
     /**
@@ -92,8 +102,7 @@ public class CT_Gyro {
      * @return the robot's heading in degrees, from -180 to 180
      */
     public Rotation2d getHeading() {
-        //System.out.println("Heading: " + Rotation2d.fromDegrees(getYaw()));
-        return Rotation2d.fromDegrees(getYaw());
+        return Rotation2d.fromDegrees(Math.IEEEremainder(getYaw(), 360.0d));
     }
 
 }
