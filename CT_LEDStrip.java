@@ -4,22 +4,21 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
-/**
- * CT_LEDStrip is a wrapper class designed for an easy interface with the AddressableLED class. 
- * @version 12/30/20
- */
-public class CT_LEDStrip extends AddressableLED {
+public class CT_LEDStrip extends AddressableLED{
 
     private AddressableLEDBuffer m_LEDBuffer;
     private int m_rainbowFirstPixelHue = 0;
-    private int m_colorIndex = 0;
+    
     private int m_snakeLoopIndex = 0;
-    private int m_doMoveCounter = 0;
-    private int m_alternateColorIndex = 0;
+    private int m_snakeCounter = 0;
+
+    private int m_movingColorsCounter = 0;
+    private int m_movingColorIndex = 0;
 
     public enum Speed {
         Slow, // 50 loop iterations
         Fast, // 25 loop iterations
+        VeryFast, // 10 loop iterations
         Ludicrous // 1 loop iteration
     }
 
@@ -92,12 +91,10 @@ public class CT_LEDStrip extends AddressableLED {
             return;
         }
 
-        int colorLoopIndex = m_colorIndex;
+        int colorLoopIndex = m_movingColorIndex;
 
         // Waits for the correct amount of loop iterations to complete.
-        if(m_doMoveCounter == 25 && speed == Speed.Fast ||
-            m_doMoveCounter == 50 && speed == Speed.Slow ||
-            m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
+        if(hasWaited(speed, m_movingColorsCounter)) {
 
             // Loops through the whole LED strip.
             for (int ledIndex = 0; ledIndex < m_LEDBuffer.getLength(); ledIndex++) {
@@ -115,16 +112,16 @@ public class CT_LEDStrip extends AddressableLED {
 
             // Increment the color index so the color pattern is off by one on the next time this method is run. 
             // This gives the effect of the colors moving down the LED strip.
-            m_colorIndex++;
+            m_movingColorIndex++;
 
             // Put the color index back to 0 if it excedes the amount of values in the array.
-            if (m_colorIndex > (color.length - 1)) {
-                m_colorIndex = 0;
+            if (m_movingColorIndex > (color.length - 1)) {
+                m_movingColorIndex = 0;
             }
-            m_doMoveCounter = 0;
+            m_movingColorsCounter = 0;
 
         } else {
-            m_doMoveCounter++;
+            m_movingColorsCounter++;
         }
 
         setData(m_LEDBuffer);
@@ -149,9 +146,7 @@ public class CT_LEDStrip extends AddressableLED {
         }
 
         // Waits for the correct amount of loop iterations to complete.
-        if(m_doMoveCounter == 25 && speed == Speed.Fast ||
-            m_doMoveCounter == 50 && speed == Speed.Slow ||
-            m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
+        if(hasWaited(speed, m_snakeCounter)) {
 
             // Loops through the whole LED strip.
             for (int ledIndex = 0; ledIndex < m_LEDBuffer.getLength(); ledIndex++) {
@@ -192,7 +187,7 @@ public class CT_LEDStrip extends AddressableLED {
                 }
 
             }
-            m_doMoveCounter = 0;
+            m_snakeCounter = 0;
 
             m_snakeLoopIndex++;
 
@@ -202,40 +197,24 @@ public class CT_LEDStrip extends AddressableLED {
             }
 
         } else {
-            m_doMoveCounter++;
+            m_snakeCounter++;
         }
 
         setData(m_LEDBuffer);
     }
 
-    /**
-     * Will alternate between the color patterns specified in the parameter. This method should be called
-     * in the periodic of a subsystem to gain full effect.
-     * 
-     * @param speed the speed at which the snake will move. Current speeds:
-     *              Slow, Fast, Ludicrous.
-     * @param colorPatterns will be all the color patterns (which are arrays) that will be alternated between.
-     */
-    public void alternateColors(Speed speed, Color... colorPatterns) {
+    private boolean hasWaited(Speed speed, int counter) {
+        if(counter == 50 && speed == Speed.Slow ||
+           counter == 25 && speed == Speed.Fast ||
+           counter == 10 && speed == Speed.VeryFast ||
+           counter == 1 && speed == Speed.Ludicrous) {
 
-        if(m_doMoveCounter == 25 && speed == Speed.Fast ||
-            m_doMoveCounter == 50 && speed == Speed.Slow ||
-            m_doMoveCounter == 1 && speed == Speed.Ludicrous) {
-
-            setColor(colorPatterns[m_alternateColorIndex]);
-            m_doMoveCounter = 0;
-            m_alternateColorIndex++;
-
+            return true;
         } else {
-            m_doMoveCounter++;
-        }
-
-        // Put the color index back to 0 if it excedes the amount of values in the array.
-        if (m_alternateColorIndex > (colorPatterns.length - 1)) {
-            m_alternateColorIndex = 0;
+            return false;
         }
     }
-
+    
     /**
      * Creates a rainbow effect on the LED strip.
      * This method should be called in the periodic of a subsystem to gain full effect.

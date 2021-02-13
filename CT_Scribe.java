@@ -1,17 +1,13 @@
-package frc.robot.util;
+package frc.robot.Toolkit;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -23,8 +19,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableRegistry;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-public class Scribe {
-    private static Scribe scribe = new Scribe();
+public class CT_Scribe {
+    private static CT_Scribe scribe = new CT_Scribe();
 
     String[] loggingClasses;
     String[] printingClasses;
@@ -86,7 +82,7 @@ public class Scribe {
         }
     }
 
-    private Scribe() {
+    private CT_Scribe() {
         loggingClasses = new String[0];
         printingClasses = new String[0];
         printStream = new StringBuffer();
