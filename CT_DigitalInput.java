@@ -1,23 +1,26 @@
 package frc.robot.Toolkit;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.InterruptHandlerFunction;
+
+import java.util.function.BiConsumer;
+
+import edu.wpi.first.wpilibj.AsynchronousInterrupt;
 import edu.wpi.first.wpilibj.Timer;
 
-public class CT_DigitalInput extends DigitalInput {
+public class CT_DigitalInput {
+    private DigitalInput m_digitalInput;
 
     private Runnable m_methodToRun;
     private Runnable m_lastMethodToRun;
     private boolean m_isInterruptLatched;
     private boolean m_negateLogic;
-    private boolean m_doBeginningEdge;
-    private int m_amountOfEdgesSeen;
     private double m_startTime;
 
     private double m_ignoringInterruptIteration;
     private boolean m_needToRelatchInterrupt;
 
     private boolean m_handleInterrupts;
+    private String m_lastEdgeTriggered;
     
     /**
      * The sole reason for seperate interrupt "state" flags (m_handleInterrupts and m_isInterruptLatched)
@@ -77,16 +80,16 @@ public class CT_DigitalInput extends DigitalInput {
      * @param negateLogic can negate the return value of getStatus() for this instance
      */
     public CT_DigitalInput(int pin, Runnable methodToRun, boolean negateLogic) { 
-        super(pin);
+        m_digitalInput = new DigitalInput(pin);
         m_negateLogic = negateLogic;
         m_methodToRun = methodToRun;
         m_lastMethodToRun = m_methodToRun;
         m_isInterruptLatched = false;
-        m_amountOfEdgesSeen = 0;
         m_startTime = 0;
         m_ignoringInterruptIteration = 0;
         m_needToRelatchInterrupt = false;
         m_handleInterrupts = false;
+        m_lastEdgeTriggered = "None";
     }
 
     /**
@@ -150,28 +153,28 @@ public class CT_DigitalInput extends DigitalInput {
      */
     public void setInterrupt(Runnable runnable, boolean interruptOnRisingEdge, boolean interruptOnFallingEdge) {
 
-        requestInterrupts(new InterruptHandlerFunction<Object>() {
+        BiConsumer<Boolean, Boolean> callback = (risingEdge, fallingEdge) -> runInterruptMethod(runnable, risingEdge, fallingEdge);
+        AsynchronousInterrupt interrupt = new AsynchronousInterrupt(m_digitalInput, callback);
+        interrupt.setInterruptEdges(interruptOnRisingEdge, interruptOnFallingEdge);
 
-            @Override
-            public void interruptFired(int interruptAssertedMask, Object param) {
-                if(m_isInterruptLatched && m_handleInterrupts) {
-                    runnable.run();
-                } else { /* Do Nothing */ }
-
-                // Uncomment this if you want to see what edge is being produced by the sensor.
-                // if((interruptAssertedMask & 0x0100) == 0x0100) {
-                //     System.out.println("Falling edge");
-                // } else {
-                //     System.out.println("Rising edge");
-                // }
-
-            }
-        });
-
-        setUpSourceEdge(interruptOnRisingEdge, interruptOnFallingEdge);
-        enableInterrupts();
+        interrupt.enable();
         setInterruptLatched(true);
         m_handleInterrupts = true;
+    }
+
+    /**
+     * Runs the runnable given by the user when the interrupt is fired and
+     * sets the m_lastEdgeTriggered variable to what edge just ran. 
+     */
+    private void runInterruptMethod(Runnable runnable, boolean risingEdge, boolean fallingEdge) {
+        if(risingEdge) {
+            m_lastEdgeTriggered = "Rising Edge";
+        } else if (fallingEdge) {
+            m_lastEdgeTriggered = "Falling Edge";
+        } else {
+            System.out.println("Unexpected output for edge callback");
+        }
+        runnable.run();
     }
 
     /**
@@ -182,97 +185,46 @@ public class CT_DigitalInput extends DigitalInput {
      * @param runnable the runnable that will run when the interrupt is fired.
      * @param interruptOnRisingEdge fire interrupt on the rising edge.
      * @param interruptOnFallingEdge fire interrupt on the falling edge.
-     * @param time time in seconds for the interrupt to be ignored after the interupt is activated.
+     * @param time time in seconds for the interrupt to be ignored after the interrupt is activated.
      */
     public void setTimedInterrupt(Runnable runnable, boolean interruptOnRisingEdge, boolean interruptOnFallingEdge, double time) {
+        BiConsumer<Boolean, Boolean> callback = (risingEdge, fallingEdge) -> runTimedInterruptMethod(runnable, risingEdge, fallingEdge, time);
+        AsynchronousInterrupt interrupt = new AsynchronousInterrupt(m_digitalInput, callback);
+        interrupt.setInterruptEdges(interruptOnRisingEdge, interruptOnFallingEdge);
 
-        requestInterrupts(new InterruptHandlerFunction<Object>() {
-
-            @Override
-            public void interruptFired(int interruptAssertedMask, Object param) {
-                if((Timer.getFPGATimestamp() - m_startTime) >= time) {
-                    if(m_isInterruptLatched && m_handleInterrupts) {
-                        runnable.run();
-                        System.out.println("FPGA Time: " + Timer.getFPGATimestamp());
-                        System.out.println("Start Time: " + m_startTime);
-                        m_startTime = Timer.getFPGATimestamp();
-                    } else { /* Do Nothing */ }
-                }
-
-                // Uncomment this if you want to see what edge is being produced by the sensor.
-                // if((interruptAssertedMask & 0x0100) == 0x0100) {
-                //     System.out.println("Falling edge");
-                // } else {
-                //     System.out.println("Rising edge");
-                // }
-
-            }
-        });
-
-        setUpSourceEdge(interruptOnRisingEdge, interruptOnFallingEdge);
-        enableInterrupts();
-        m_isInterruptLatched = true;
+        interrupt.enable();
+        setInterruptLatched(true);
         m_handleInterrupts = true;
     }
 
     /**
-     * Sets up an alternating interrupt that will enable and disable itself based on the two edges.
-     * For example, if you decide to begin on a rising edge, another rising edge cannot trigger 
-     * the interrupt until a falling edge happens for a certain amount of edges.
-     * To use a command, for example use: "() -> new PrintCommand("Interrupt Fired").schedule" for the runnable.
-     * 
-     * @param runnable the runnable to be run when the interrupt is fired.
-     * @param beginOnRisingEdge whether or not the interrupt will start on the rising edge or the falling edge.
-     *                          The example above is an example of this value being true.
-     * @param amountOfEdges amount of edges of the opposite edge that needs to be seen before enabling the beginning edge.
+     * Runs the runnable given by the user when the interrupt is fired and
+     * sets the m_lastEdgeTriggered variable to what edge just ran. 
      */
-    public void setAlternatingInterrupt(Runnable runnable, boolean beginOnRisingEdge, int amountOfEdges) {
+    private void runTimedInterruptMethod(Runnable runnable, boolean risingEdge, boolean fallingEdge, double time) {
+        if(risingEdge) {
+            m_lastEdgeTriggered = "Rising Edge";
+        } else if (fallingEdge) {
+            m_lastEdgeTriggered = "Falling Edge";
+        } else {
+            System.out.println("Unexpected output for edge callback");
+        }
 
-        m_doBeginningEdge = true;
+        if((Timer.getFPGATimestamp() - m_startTime) >= time) {
+            if(m_isInterruptLatched && m_handleInterrupts) {
+                runnable.run();
+                // System.out.println("FPGA Time: " + Timer.getFPGATimestamp());
+                // System.out.println("Start Time: " + m_startTime);
+                m_startTime = Timer.getFPGATimestamp();
+            } else { /* Do Nothing */ }
+        }
+    }
 
-        requestInterrupts(new InterruptHandlerFunction<Object>() {
-            @Override
-            public void interruptFired(int interruptAssertedMask, Object param) {
-                if(m_isInterruptLatched && m_handleInterrupts) {
-                    boolean wasRisingEdge = true;
-                    if((interruptAssertedMask & 0x0100) == 0x0100) {
-                        wasRisingEdge = false;
-                        //System.out.println("Falling edge");
-                    }
-                    // else {
-                    //     System.out.println("Rising edge");
-                    // }
-                    // Uncomment this if you want to see what edge is being produced by the sensor.
-
-                    if(beginOnRisingEdge) {
-                        if(wasRisingEdge && m_doBeginningEdge) {
-                            runnable.run();
-                            m_doBeginningEdge = false;
-                            m_amountOfEdgesSeen = 0;
-                        } else if(!wasRisingEdge) {
-                            m_amountOfEdgesSeen++;
-                            if(m_amountOfEdgesSeen == amountOfEdges)
-                                m_doBeginningEdge = true;
-                        }
-                    } else {
-                        if(!wasRisingEdge && m_doBeginningEdge) {
-                            runnable.run();
-                            m_doBeginningEdge = false;
-                            m_amountOfEdgesSeen = 0;
-                        } else if(wasRisingEdge) {
-                            m_amountOfEdgesSeen++;
-                            if(m_amountOfEdgesSeen == amountOfEdges)
-                                m_doBeginningEdge = true;
-                        }
-                    }
-                }
-            }
-        });
-
-        setUpSourceEdge(true, true);
-        enableInterrupts();
-        m_isInterruptLatched = true;
-        m_handleInterrupts = true;
+    /**
+     * Gets the last edge triggered by the setInterrupt methods.
+     */
+    public String getLastEdgeTriggered() {
+        return m_lastEdgeTriggered;
     }
 
     /**
@@ -338,9 +290,9 @@ public class CT_DigitalInput extends DigitalInput {
      */
     public boolean get() {
         if(m_negateLogic)
-            return !super.get();
+            return !m_digitalInput.get();
         else
-            return super.get();
+            return m_digitalInput.get();
     }
 
     /**
